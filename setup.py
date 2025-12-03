@@ -8,7 +8,13 @@ setup(
     include_package_data=True,
     entry_points={
         "mkdocs.plugins": [
-            "header_plugin = test_plugin.plugin:MyButtonPlugin"
+            "header_plugin = versions_plugin.plugin:MyButtonPlugin"
         ]
-    }
-)
+    },
+    package_data={
+        'versions_plugin': [
+            'extra_files/*.css', 
+            'extra_files/*.js'
+            ]
+        },
+    )

@@ -1,0 +1,5 @@
+.venv
+*.egg-info
+docs
+build
+/mkdocs.yml
