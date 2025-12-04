@@ -3,3 +3,5 @@
 docs
 build
 /mkdocs.yml
+.DS_Store
+__pycache__/
