@@ -16,5 +16,5 @@ setup(
             'extra_files/*.css', 
             'extra_files/*.js'
             ]
-        },
+        }
     )
