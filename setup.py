@@ -2,19 +2,16 @@ from setuptools import setup, find_packages
 
 setup(
     name="mkdocs-versioning",
-    version="0.1.1",
-    description="Simple version selector for MkDocs",
+    version="0.1.0",
+    description="MkDocs plugin to add a custom button to the header.",
     packages=find_packages(),
-    include_package_data=True,
     entry_points={
         "mkdocs.plugins": [
-            "header_plugin = versions_plugin.plugin:MyButtonPlugin"
+            "header_plugin = versions_plugin.plugin:MyThemePlugin"
         ]
     },
+    include_package_data=True,
     package_data={
-        'versions_plugin': [
-            'extra_files/*.css', 
-            'extra_files/*.js'
-            ]
-        }
-    )
+        "versions_plugin": ["overrides/**/*.html", "static/css/*.css"]
+    }
+)

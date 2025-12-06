@@ -1,0 +1,49 @@
+{#-
+  This file extends the standard 'base.html' from the Material theme.
+  It adds a custom button to the header navigation.
+-#}
+{% extends "base.html" %}
+
+{% block header %}
+  <header class="md-header" data-md-component="header">
+    <nav class="md-header__nav md-grid" aria-label="{{ lang.t('header.title') }}">
+      {# Логотип сайта #}
+      <a href="{{ page.url | url }}" title="{{ config.site_name | e }}" class="md-header__button md-logo">
+        {% include ".icons/logo.svg" %}
+      </a>
+      
+      {# Включаем навигационные вкладки или стандартную навигацию #}
+      {% with path = 'partials/' ~ (config.theme.palette.scheme and 'header-tabs' or 'header-nav') ~ '.html' %}
+        {% include path %}
+      {% endwith %}
+
+      {# ########################################### #}
+      {# Вставляем вашу кастомную кнопку ЗДЕСЬ #}
+      {# ########################################### #}
+      {% if my_button_target_url %}
+      <a href="{{ my_button_target_url }}" class="md-button md-button--custom">Моя кнопка</a>
+      {% endif %}
+
+      {# Стандартный заголовок страницы #}
+      <div class="md-header__title" data-md-component="header-title">
+        <div class="md-header__ellipsis">
+          <div class="md-header__topic">
+            <span class="md-ellipsis">
+              {{ config.site_name }}
+            </span>
+          </div>
+          <div class="md-header__topic" data-md-component="header-topic">
+            <span class="md-ellipsis">
+              {{ page.title }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      {# Кнопка поиска и другие стандартные элементы #}
+      {% include "partials/search.html" %}
+      {% include "partials/palette.html" %}
+      {% include "partials/social.html" %}
+    </nav>
+  </header>
+{% endblock %}
