@@ -1,9 +1,7 @@
 /**
- * Функция для добавления выплывающего списка версий в хедер.
- * @param {Array} versionsData - Массив объектов с данными о версиях
- * @param {string} defaultVersion - Название версии по умолчанию (опционально)
+ * Функция для добавления кнопки в хедер, принимающая URL как аргумент.
  */
-function addDropdownToHeader(versionsData, defaultVersion) {
+function addButtonToHeader() {
     const header = document.querySelector(".md-header");
 
     if (header && !header.querySelector('.md-dropdown--custom')) {
@@ -90,52 +88,39 @@ function addDropdownToHeader(versionsData, defaultVersion) {
             if (searchButton && !header.querySelector('.md-dropdown--custom')) {
                 const dropdownContainer = document.createElement("div");
                 dropdownContainer.className = "md-dropdown--custom";
-
+                
+                // Создаем кнопку для открытия dropdown
                 const button = document.createElement("button");
                 button.className = "md-dropdown-button";
+                button.textContent = "Меню";
                 button.setAttribute("aria-haspopup", "true");
                 button.setAttribute("aria-expanded", "false");
-                button.textContent = currentVersion ? currentVersion.name : "Версии";
-
+                
+                // Создаем список опций
                 const dropdown = document.createElement("ul");
                 dropdown.className = "md-dropdown-menu";
-
-                if (versionsData && Array.isArray(versionsData)) {
-                    versionsData.forEach(function(version) {
-                        const menuItem = document.createElement("li");
-                        const link = document.createElement("a");
-                        link.href = "#";
-                        link.textContent = version.name;
-
-                        link.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            
-                            currentVersion = version;
-                            sessionStorage.setItem('selectedVersion', JSON.stringify(version));
-                            button.textContent = version.name;
-                            button.setAttribute('aria-expanded', 'false');
-                            dropdown.classList.remove('open');
-
-                            // Обновляем навигацию только при выборе версии
-                            restoreNavigation();
-                        });
-
-                        menuItem.appendChild(link);
-                        dropdown.appendChild(menuItem);
-                    });
-                }
-
+                
+                // Добавляем пункт меню
+                const menuItem = document.createElement("li");
+                const link = document.createElement("a");
+                link.href = __TARGET_URL__;
+                link.textContent = "Перейти на целевую страницу";
+                menuItem.appendChild(link);
+                dropdown.appendChild(menuItem);
+                
+                // Собираем dropdown
                 dropdownContainer.appendChild(button);
                 dropdownContainer.appendChild(dropdown);
-
+                
+                // Добавляем обработчик клика для открытия/закрытия
                 button.addEventListener("click", function(e) {
                     e.stopPropagation();
                     const isExpanded = button.getAttribute("aria-expanded") === "true";
                     button.setAttribute("aria-expanded", !isExpanded);
                     dropdown.classList.toggle("open");
                 });
-
+                
+                // Закрываем dropdown при клике вне его
                 document.addEventListener("click", function(e) {
                     if (!dropdownContainer.contains(e.target)) {
                         button.setAttribute("aria-expanded", "false");
@@ -155,3 +140,15 @@ function addDropdownToHeader(versionsData, defaultVersion) {
         observer.observe(header, { childList: true, subtree: true });
     }
 }
+
+// Запускаем функцию при первой загрузке и при мгновенных переходах
+// Используем setTimeout, чтобы убедиться, что Material-скрипты загружены
+if (window.document$ && window.document$.subscribe) {
+    document$.subscribe(() => {
+        // Вызов функции будет добавлен Python-скриптом
+    });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    // Вызов функции будет добавлен Python-скриптом
+});
