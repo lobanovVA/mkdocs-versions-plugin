@@ -70,6 +70,7 @@ class MyButtonPlugin(BasePlugin):
                     target_url = "/" + nav_page.url  # Получаем относительный URL
                     break
         
+        
         # Если нашли целевую страницу, добавляем кнопку
         if target_url:
             js_content = files("versions_plugin.extra_files").joinpath("extra_js.js").read_text()
