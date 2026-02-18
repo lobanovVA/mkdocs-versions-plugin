@@ -1,4 +1,5 @@
 .venv
+site
 *.egg-info
 docs
 build
