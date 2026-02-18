@@ -7,31 +7,7 @@ function addDropdownToHeader(versionsData, defaultVersion) {
     const header = document.querySelector(".md-header");
 
     if (header && !header.querySelector('.md-dropdown--custom')) {
-        // Глобальные функции для использования везде
-        window.escapeHtml = function(text) {
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.replace(/[&<>"']/g, m => map[m]);
-        };
-
-        window.buildNavHtml = function(items) {
-            if (!items || !items.length) return '';
-            let html = '';
-            items.forEach(function(it) {
-                if (it.type === 'section' || it.type === 'dir') {
-                    html += '<li class="md-nav__item">';
-                    html += '<div class="md-nav__link"><strong>' + window.escapeHtml(it.name) + '</strong></div>';
-                    html += '<ul class="md-nav__list">' + window.buildNavHtml(it.children) + '</ul>';
-                    html += '</li>';
-                } else if (it.type === 'page') {
-                    html += '<li class="md-nav__item">';
-                    html += '<a class="md-nav__link" href="' + window.escapeHtml(it.url) + '"><span class="md-ellipsis">' + window.escapeHtml(it.name) + '</span></a>';
-                    html += '</li>';
-                }
-            });
-            return html;
-        };
-
-        // Инициализируем currentVersion
+        // Определяем текущую версию
         let currentVersion = null;
         {
             let saved = sessionStorage.getItem('selectedVersion');
@@ -52,6 +28,59 @@ function addDropdownToHeader(versionsData, defaultVersion) {
                 }
                 if (currentVersion) {
                     sessionStorage.setItem('selectedVersion', JSON.stringify(currentVersion));
+                }
+            }
+        }
+
+        // Функция для построения HTML навигации
+        function buildNavHtml(items) {
+            if (!items || !items.length) return '';
+            let html = '';
+            items.forEach(function(it) {
+                if (it.type === 'section' || it.type === 'dir') {
+                    html += '<li class="md-nav__item">';
+                    html += '<div class="md-nav__link"><strong>' + escapeHtml(it.name) + '</strong></div>';
+                    html += '<ul class="md-nav__list">' + buildNavHtml(it.children) + '</ul>';
+                    html += '</li>';
+                } else if (it.type === 'page') {
+                    html += '<li class="md-nav__item">';
+                    html += '<a class="md-nav__link" href="' + escapeHtml(it.url) + '"><span class="md-ellipsis">' + escapeHtml(it.name) + '</span></a>';
+                    html += '</li>';
+                }
+            });
+            return html;
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Функция для восстановления навигации
+        function restoreNavigation() {
+            let savedVersion = sessionStorage.getItem('selectedVersion');
+            
+            if (!savedVersion && versionsData && versionsData.length > 0) {
+                let versionToUse = defaultVersion ? versionsData.find(v => v.name === defaultVersion) : null;
+                if (!versionToUse) versionToUse = versionsData[0];
+                savedVersion = JSON.stringify(versionToUse);
+                sessionStorage.setItem('selectedVersion', savedVersion);
+            }
+            
+            if (savedVersion && versionsData && Array.isArray(versionsData)) {
+                try {
+                    const version = JSON.parse(savedVersion);
+                    const found = versionsData.find(v => v.name === version.name);
+                    
+                    if (found) {
+                        const navList = document.querySelector('.md-nav__list');
+                        if (navList) {
+                            const newHtml = buildNavHtml(found.children || []);
+                            navList.innerHTML = newHtml;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Ошибка восстановления версии:', e);
                 }
             }
         }
@@ -88,12 +117,8 @@ function addDropdownToHeader(versionsData, defaultVersion) {
                             button.setAttribute('aria-expanded', 'false');
                             dropdown.classList.remove('open');
 
-                            // Обновляем навигацию только когда пользователь явно выбрал версию
-                            const navList = document.querySelector('.md-nav__list');
-                            if (navList) {
-                                const newHtml = window.buildNavHtml(version.children || []);
-                                navList.innerHTML = newHtml;
-                            }
+                            // Обновляем навигацию только при выборе версии
+                            restoreNavigation();
                         });
 
                         menuItem.appendChild(link);
@@ -119,56 +144,14 @@ function addDropdownToHeader(versionsData, defaultVersion) {
                 });
 
                 searchButton.insertAdjacentElement('beforebegin', dropdownContainer);
+                
+                // Восстанавливаем навигацию один раз после создания кнопки
+                restoreNavigation();
+                
                 obs.disconnect();
             }
         });
 
         observer.observe(header, { childList: true, subtree: true });
-    }
-
-    // Функция для восстановления навигации - вызывается только при загрузке
-    window.restoreNavigation = function() {
-        let savedVersion = sessionStorage.getItem('selectedVersion');
-        
-        if (!savedVersion && versionsData && versionsData.length > 0) {
-            let versionToUse = defaultVersion ? versionsData.find(v => v.name === defaultVersion) : null;
-            if (!versionToUse) versionToUse = versionsData[0];
-            savedVersion = JSON.stringify(versionToUse);
-            sessionStorage.setItem('selectedVersion', savedVersion);
-        }
-        
-        if (savedVersion && versionsData && Array.isArray(versionsData)) {
-            try {
-                const version = JSON.parse(savedVersion);
-                const found = versionsData.find(v => v.name === version.name);
-                
-                if (found) {
-                    // Обновляем кнопку
-                    const button = document.querySelector('.md-dropdown-button');
-                    if (button) {
-                        button.textContent = found.name;
-                    }
-                    
-                    // Обновляем навигацию один раз при загрузке
-                    const navList = document.querySelector('.md-nav__list');
-                    if (navList) {
-                        const newHtml = window.buildNavHtml(found.children || []);
-                        navList.innerHTML = newHtml;
-                    }
-                }
-            } catch (e) {
-                console.error('Ошибка восстановления версии:', e);
-            }
-        }
-    };
-
-    // Восстанавливаем навигацию при загрузке страницы
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(window.restoreNavigation, 100);
-        });
-    } else {
-        // Если документ уже загружен
-        setTimeout(window.restoreNavigation, 100);
     }
 }
