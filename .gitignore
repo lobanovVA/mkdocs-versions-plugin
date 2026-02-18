@@ -6,3 +6,4 @@ build
 /mkdocs.yml
 .DS_Store
 __pycache__/
+site

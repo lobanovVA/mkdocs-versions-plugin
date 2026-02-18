@@ -27,6 +27,8 @@ class MyButtonPlugin(BasePlugin):
     config_scheme = (
         # Параметр 'versions_folder' - путь к папке с версиями относительно docs_dir
         ('versions_folder', config_options.Type(str, default='versions')),
+        # Параметр 'default_version' - название версии, которую выбирать по умолчанию
+        ('default_version', config_options.Type(str, default=None)),
     )
 
     def on_nav(self, nav, config, files):
@@ -102,11 +104,13 @@ class MyButtonPlugin(BasePlugin):
                 for item in sorted(os.listdir(versions_path)):
                     item_path = os.path.join(versions_path, item)
                     if os.path.isdir(item_path):
+                        # Версия отображается как раздел (section) без собственной ссылки
+                        # type='section' для правильного отображения в навигации
                         folder_url = f"/{versions_folder}/{item}/"
                         versions.append({
                             'name': item,
-                            'url': folder_url,
-                            'children': build_tree(item_path, f"/{versions_folder}/{item}/")
+                            'type': 'section',
+                            'children': build_tree(item_path, folder_url)
                         })
             except Exception as e:
                 print(f"Ошибка при чтении папки версий: {e}")
@@ -134,11 +138,13 @@ class MyButtonPlugin(BasePlugin):
         
         print(f"DEBUG: Найдено версий: {len(versions)}")
         print(f"DEBUG: Данные версий: {versions}")
+        print(f"DEBUG: Default version: {self.config['default_version']}")
         
         # Если список версий не пуст, добавляем меню
         if versions:
             # Преобразуем список в JSON для передачи в JavaScript
             versions_json = json.dumps(versions)
+            default_version = self.config['default_version']
             
             js_content = files("versions_plugin.extra_files").joinpath("extra_js.js").read_text()
             js_script = soup.new_tag("script")
@@ -148,14 +154,15 @@ class MyButtonPlugin(BasePlugin):
 
                 // Вызовы функции addDropdownToHeader с данными версий
                 var versionsData = {versions_json};
+                var defaultVersion = {json.dumps(default_version)};
                 
                 window.addEventListener('DOMContentLoaded', function() {{
-                    addDropdownToHeader(versionsData);
+                    addDropdownToHeader(versionsData, defaultVersion);
                 }});
                 
                 if (window.document$ && window.document$.subscribe) {{
                     document$.subscribe(function() {{
-                        addDropdownToHeader(versionsData);
+                        addDropdownToHeader(versionsData, defaultVersion);
                     }});
                 }}
             """
