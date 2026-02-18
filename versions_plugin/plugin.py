@@ -156,14 +156,18 @@ class MyButtonPlugin(BasePlugin):
                 var versionsData = {versions_json};
                 var defaultVersion = {json.dumps(default_version)};
                 
-                window.addEventListener('DOMContentLoaded', function() {{
-                    addDropdownToHeader(versionsData, defaultVersion);
-                }});
-                
-                if (window.document$ && window.document$.subscribe) {{
-                    document$.subscribe(function() {{
+                // Флаг чтобы не инициализировать функцию дважды
+                if (!window._dropdownInitialized) {{
+                    window._dropdownInitialized = true;
+                    
+                    // Инициализируем при загрузке
+                    if (document.readyState === 'loading') {{
+                        document.addEventListener('DOMContentLoaded', function() {{
+                            addDropdownToHeader(versionsData, defaultVersion);
+                        }});
+                    }} else {{
                         addDropdownToHeader(versionsData, defaultVersion);
-                    }});
+                    }}
                 }}
             """
             
