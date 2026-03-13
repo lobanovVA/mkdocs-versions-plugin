@@ -26,6 +26,7 @@ function addDropdownToHeader(versionsData, defaultVersion) {
                 }
             }
             
+            
             if (!currentVersion && versionsData && versionsData.length > 0) {
                 if (defaultVersion) {
                     currentVersion = versionsData.find(v => v.name === defaultVersion);
