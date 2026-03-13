@@ -6,6 +6,13 @@
 function addDropdownToHeader(versionsData, defaultVersion) {
     const header = document.querySelector(".md-header");
 
+    // Скрываем стандартную навигацию, чтобы избежать мерцания
+    const navNode = document.querySelector('.md-nav') || document.querySelector('.md-sidebar');
+    if (navNode) {
+        navNode.style.transition = navNode.style.transition || 'opacity 0.15s ease';
+        navNode.style.opacity = '0';
+    }
+
     if (header && !header.querySelector('.md-dropdown--custom')) {
         // Определяем текущую версию
         let currentVersion = null;
@@ -33,14 +40,20 @@ function addDropdownToHeader(versionsData, defaultVersion) {
         }
 
         // Функция для построения HTML навигации
-        function buildNavHtml(items) {
+        function buildNavHtml(items, currentPath = '') {
             if (!items || !items.length) return '';
             let html = '';
             items.forEach(function(it) {
                 if (it.type === 'section' || it.type === 'dir') {
-                    html += '<li class="md-nav__item">';
-                    html += '<div class="md-nav__link"><strong>' + escapeHtml(it.name) + '</strong></div>';
-                    html += '<ul class="md-nav__list">' + buildNavHtml(it.children) + '</ul>';
+                    const itemPath = currentPath + '/' + it.name;
+                    const storageKey = 'navCollapsed_' + itemPath;
+                    const isCollapsed = sessionStorage.getItem(storageKey) === 'true';
+                    const expandedAttr = isCollapsed ? 'false' : 'true';
+                    const collapsedClass = isCollapsed ? ' collapsed' : '';
+
+                    html += '<li class="md-nav__item' + collapsedClass + '" data-path="' + itemPath + '">';
+                    html += '<div class="md-nav__link md-nav__section-toggle" data-collapsible="true" aria-expanded="' + expandedAttr + '"><strong>' + escapeHtml(it.name) + '</strong></div>';
+                    html += '<ul class="md-nav__list">' + buildNavHtml(it.children, itemPath) + '</ul>';
                     html += '</li>';
                 } else if (it.type === 'page') {
                     html += '<li class="md-nav__item">';
@@ -49,6 +62,28 @@ function addDropdownToHeader(versionsData, defaultVersion) {
                 }
             });
             return html;
+        }
+
+        function initCollapsibles(container) {
+            const toggles = (container || document).querySelectorAll('.md-nav__section-toggle');
+            toggles.forEach(function(toggle) {
+                const item = toggle.closest('.md-nav__item');
+                if (!item) return;
+
+                // Если уже инициализировано, пропускаем
+                if (toggle.dataset._collapsibleInit) return;
+                toggle.dataset._collapsibleInit = '1';
+
+                toggle.style.cursor = 'pointer';
+                toggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const isCollapsed = item.classList.toggle('collapsed');
+                    toggle.setAttribute('aria-expanded', (!isCollapsed).toString());
+                    const path = item.dataset.path;
+                    const storageKey = 'navCollapsed_' + path;
+                    sessionStorage.setItem(storageKey, isCollapsed.toString());
+                });
+            });
         }
 
         function escapeHtml(text) {
@@ -75,8 +110,14 @@ function addDropdownToHeader(versionsData, defaultVersion) {
                     if (found) {
                         const navList = document.querySelector('.md-nav__list');
                         if (navList) {
-                            const newHtml = buildNavHtml(found.children || []);
+                            const newHtml = buildNavHtml(found.children || [], '');
                             navList.innerHTML = newHtml;
+                            initCollapsibles(navList);
+                        }
+
+                        // Показываем навигацию после подстановки, чтобы убрать мерцание
+                        if (navNode) {
+                            navNode.style.opacity = '';
                         }
                     }
                 } catch (e) {
