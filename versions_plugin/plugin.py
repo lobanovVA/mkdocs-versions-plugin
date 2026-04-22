@@ -136,10 +136,6 @@ class MyButtonPlugin(BasePlugin):
         # Получаем список версий
         versions = self.get_versions_list()
         
-        print(f"DEBUG: Найдено версий: {len(versions)}")
-        print(f"DEBUG: Данные версий: {versions}")
-        print(f"DEBUG: Default version: {self.config['default_version']}")
-        
         # Если список версий не пуст, добавляем меню
         if versions:
             # Преобразуем список в JSON для передачи в JavaScript
@@ -184,3 +180,10 @@ class MyButtonPlugin(BasePlugin):
         
         # Возвращаем модифицированный HTML в виде строки
         return str(soup)
+
+    def on_config(self, config):
+
+        versions = self.get_versions_list()
+        
+        print(f"DEBUG: Найдено версий: {len(versions)}")
+        print(f"DEBUG: Default version: {self.config['default_version']}")
